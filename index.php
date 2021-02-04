@@ -3,6 +3,10 @@
 	$title = "Home";
 	function get_content() {
 	require_once 'controllers/connection.php';
+
+	$number = 0;
+	$empty_array = array();
+
 	if(isset($_SESSION["user_details"])) {
 		$id = $_SESSION["user_details"]["user_id"];
 		if($_SESSION["user_details"]["gender_id"] == 1) {
@@ -71,7 +75,19 @@
 	$result = $stmt->get_result();
 	$genders = $result->fetch_all(MYSQLI_ASSOC);
 
-	$number = 0;
+	if($users == $empty_array) {
+
+	} else {
+		$user_iid = intval($users[$number]['user_id']);
+	}
+
+	$query = "SELECT * FROM images where user_id = ?";
+	$stmt = $cn->prepare($query);
+	$stmt->bind_param("i", $user_iid);
+	$stmt->execute();
+	$result = $stmt->get_result();
+	$images = $result->fetch_all(MYSQLI_ASSOC);
+
 ?>
 	<?php if(!isset($_SESSION["user_details"])): ?>
 	<header class="d-flex justify-content-center align-items-center">
@@ -134,7 +150,7 @@
 	</header>
 	<?php endif; ?>
 
-	<?php if(isset($_SESSION["user_details"])): ?>
+	<?php if(isset($_SESSION["user_details"]) && $_SESSION["user_details"]["user_verification"] == 1): ?>
 	<?php 
 	$query = "SELECT `user_id2` FROM `match` WHERE `user_id1` = ?";
 	$stmt = $cn->prepare($query);
@@ -171,18 +187,58 @@
 			<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
 		</div>
 	<?php endif; ?>
+		<?php if($users == $empty_array): ?>
+		<div class="container">
+		<div class="row">
+			<div class="col-md-4 py-5 mx-auto">
+				<h4>No more users available.</h4>
+			</div>
+		</div>
+		</div>
+		<?php else: ?>
+		<div class="container">
+		<div class="row">
+			<div class="col-md-4 py-5 mx-auto">
+				<div class="card">
+					<img src="<?php echo $users[$number]['profile_picture'] ?>" class="card-img-top mx-auto mt-3" id="myprofile-img">
+					<div class="card-body">
+						<p class="card-text text-center"><?php echo $users[$number]['firstname'] ?> <?php echo $users[$number]['lastname'] ?></p>
+						<p class="card-text text-center">Birthday: <?php echo $users[$number]['birthday'] ?></p>
+						<?php if($images == $empty_array): ?>
+						<?php else: ?>
+						<div class="fadeee">
+							<?php foreach($images as $image): ?>
+								<div>
+								<img src="<?php echo $image['image'] ?>" class="col-12" id="<?php echo $image['image_id'] ?>">
+								</div>
+							<?php endforeach; ?>
+						</div>
+						<?php endif; ?>
+					</div>
+					<div class="card-footer">
+						<a class="btn btn-danger" href="/controllers/match/dislike.php?id=<?php echo $users[$number]['user_id']; ?>"><i class="fa fa-times" aria-hidden="true"></i></a>
+						<a class="btn btn-success" href="/controllers/match/like.php?id=<?php echo $users[$number]['user_id']; ?>"><i class="fa fa-heart" aria-hidden="true"></i></a>
+					</div>
+				</div>
+			</div>
+		</div>
+		</div>
+		<?php endif; ?>
+
+	<?php elseif(isset($_SESSION["user_details"]) && $_SESSION["user_details"]["user_verification"] == 0): ?>
 	<div class="container">
 	<div class="row">
 		<div class="col-md-4 py-5 mx-auto">
-            <div class="card">
-                <img src="<?php echo $users[$number]['profile_picture'] ?>" class="card-img-top mx-auto mt-3" id="myprofile-img">
+		<div class="card mt-3">
 				<div class="card-body">
-					<p class="card-text text-center"><?php echo $users[$number]['firstname'] ?> <?php echo $users[$number]['lastname'] ?></p>
-					<p class="card-text text-center">Birthday: <?php echo $users[$number]['birthday'] ?></p>
+					<h5 class="card-title">Please verify your account with a photo of your Identification Card or Driver's License</h5>
 				</div>
 				<div class="card-footer">
-					<a class="btn btn-danger" href="/controllers/match/dislike.php?id=<?php echo $users[$number]['user_id']; ?>"><i class="fa fa-times" aria-hidden="true"></i></a>
-					<a class="btn btn-success" href="/controllers/match/like.php?id=<?php echo $users[$number]['user_id']; ?>"><i class="fa fa-heart" aria-hidden="true"></i></a>
+					<form method="POST" action="/controllers/users/verify_user.php" enctype="multipart/form-data">
+						<input type="hidden" name="id" value="<?php echo $id ?>">
+						<input type="file" name="image" class="form-control">
+						<button class="btn btn-primary mt-2">Submit</button>
+					</form>
 				</div>
 			</div>
 		</div>

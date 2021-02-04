@@ -1,6 +1,6 @@
 <?php  
 require_once '../connection.php';
-//require_once '../../vendor/autoload.php';	
+require_once '../../vendor/autoload.php';	
 
 $birthday = htmlspecialchars($_POST['birthday']);
 $date = date("Y-m-d H:i:s", strtotime($birthday));
@@ -12,6 +12,8 @@ $email = htmlspecialchars($_POST['email']);
 $gender_id = intval($_POST['gender_id']);
 $password = htmlspecialchars($_POST['password']);
 $password2 = htmlspecialchars($_POST['password2']);
+$false = 0;
+$otp = rand(100000,999999);
 
 //image 
 $img_name = $_FILES['image']['name'];
@@ -69,30 +71,30 @@ if($email) {
 //Store the user in the database.
 if($errors === 0 && $is_img && $img_size > 0) {
 	move_uploaded_file($img_tmpname, $_SERVER["DOCUMENT_ROOT"].$img_path);
-	$query = "INSERT INTO users (gender_id, profile_picture, firstname, lastname, birthday, email, password) VALUES (?, ?, ?, ?, ?, ?, ?)";
+	$query = "INSERT INTO users (gender_id, profile_picture, firstname, lastname, birthday, email, password, user_verification, otp, otp_verification) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 	$stmt = $cn->prepare($query);
-	$stmt->bind_param("issssss", $gender_id, $img_path, $firstname, $lastname, $date, $email, password_hash($password, PASSWORD_DEFAULT));
+	$stmt->bind_param("issssssiii", $gender_id, $img_path, $firstname, $lastname, $date, $email, password_hash($password, PASSWORD_DEFAULT), $false, $otp, $false);
 	$stmt->execute();
 	$stmt->close();
 	$cn->close();
 
-	//send an email that says you have successfully registered.
+	// send an email that says you have successfully registered.
 	
-	//Create the transport
-	// $transport = (new Swift_SmtpTransport('smtp.gmail.com', 587, 'tls'))
-	// ->setUsername("")
-	// ->setPassword("");
+	// Create the transport
+	$transport = (new Swift_SmtpTransport('smtp.gmail.com', 587, 'tls'))
+	->setUsername("nicholaskoaytest@gmail.com")
+	->setPassword("nicholaskfc123");
 	
 	//Create the Mailer using your created Transport
-	// $mailer = new Swift_Mailer($transport);
+	$mailer = new Swift_Mailer($transport);
 	
-	//Create a message
-	// $message = (new Swift_Message("B2-ECOM Registration"))
-	// ->setFrom(['emerson@forwardschool.co' => 'Emerson']) 
-	// ->setTo([$email => $firstname])
-	// ->setBody("Thank you for creating an account in B2-ECOM");
+	// Create a message
+	$message = (new Swift_Message("Your OTP"))
+	->setFrom(['nicholaskoaytest@gmail.com' => 'Nicholas']) 
+	->setTo([$email => $firstname])
+	->setBody("Thank you for creating an account in EZDATE, your OTP is $otp.");
 	
-	// $mailer->send($message);
+	$mailer->send($message);
 
 	header("Location: /");
 }

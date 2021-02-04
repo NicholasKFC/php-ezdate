@@ -10,11 +10,19 @@
 		<ul class="navbar-nav">
 			<?php if(isset($_SESSION["user_details"])): ?>
 			<div class="dropstart">
+				<?php if($_SESSION["user_details"]["user_verification"] == 1): ?>
 				<img src="<?php echo $_SESSION["user_details"]["profile_picture"]; ?>" id="profile-pic-small" class="dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
 			<ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
 				<li><a class="dropdown-item" href="/views/myprofile.php">My Profile</a></li>
 				<li><a class="dropdown-item" href="/controllers/auth/logout.php">Logout</a></li>
 			</ul>
+				<?php else: ?>
+				<img src="<?php echo $_SESSION["user_details"]["profile_picture"]; ?>" id="profile-pic-small" class="dropdown-toggle border border-4 border-danger" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+			<ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+				<li><a class="dropdown-item" href="/views/myprofile.php">My Profile <span class="badge bg-danger">1</span></a></li>
+				<li><a class="dropdown-item" href="/controllers/auth/logout.php">Logout</a></li>
+			</ul>
+				<?php endif; ?>
 			</div>
 			<?php else: ?>
 			<li class="nav-item">

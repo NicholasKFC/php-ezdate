@@ -10,7 +10,14 @@ function get_content() {
 	$stmt->bind_param("i", $id);
 	$stmt->execute();
 	$result = $stmt->get_result();
-    $user = $result->fetch_assoc();
+	$user = $result->fetch_assoc();
+
+	$query = "SELECT * FROM images where user_id = ?";
+	$stmt = $cn->prepare($query);
+	$stmt->bind_param("i", $id);
+	$stmt->execute();
+	$result = $stmt->get_result();
+	$images = $result->fetch_all(MYSQLI_ASSOC);
 ?>
 
 <div class="container">
@@ -23,6 +30,25 @@ function get_content() {
 					<p class="card-text text-center">Last Name: <?php echo $user['lastname'] ?></p>
 					<p class="card-text text-center">Email: <?php echo $user['email'] ?></p>
 					<p class="card-text text-center">Birthday: <?php echo $user['birthday'] ?></p>
+					<?php if($images == array()): ?>
+						<?php else: ?>
+						<div class="fadeee">
+							<?php foreach($images as $image): ?>
+								<div>
+								<img src="<?php echo $image['image'] ?>" class="col-12" id="<?php echo $image['image_id'] ?>">
+								</div>
+							<?php endforeach; ?>
+						</div>
+					<?php endif; ?>
+					<form method="POST" action="/controllers/users/uploadimg.php" enctype="multipart/form-data">
+						<input type="hidden" name="id" value="<?php echo $user['user_id'] ?>">
+						<div class="mb-3">
+							<label>Photos</label>
+							<input type="file" name="images[]" class="form-control" multiple>
+						</div>
+						<button class="btn btn-primary">Submit</button>
+					</form>
+
 				</div>
 
 				<div class="card-footer">
@@ -81,6 +107,21 @@ function get_content() {
 				</div>
 
 			</div>
+
+			<?php if($user["user_verification"] == false): ?>
+			<div class="card mt-3">
+				<div class="card-body">
+					<h5 class="card-title">Please verify your account with a photo of your Identification Card or Driver's License</h5>
+				</div>
+				<div class="card-footer">
+					<form method="POST" action="/controllers/users/verify_user.php" enctype="multipart/form-data">
+						<input type="hidden" name="id" value="<?php echo $user['user_id'] ?>">
+						<input type="file" name="image" class="form-control">
+						<button class="btn btn-primary mt-2">Submit</button>
+					</form>
+				</div>
+			</div>
+			<?php endif; ?>
 		</div>
 	</div>
 </div>
